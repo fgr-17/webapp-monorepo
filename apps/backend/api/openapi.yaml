@@ -1,0 +1,187 @@
+openapi: 3.0.3
+info:
+  title: Calculator API
+  description: Basic arithmetic operations for the webapp-monorepo template.
+  version: 1.0.0
+servers:
+  - url: /
+    description: Current host
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: getHealth
+      tags:
+        - system
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                status: ok
+  /api/add:
+    post:
+      summary: Add two numbers
+      operationId: add
+      tags:
+        - calculator
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Operands"
+            example:
+              a: 10
+              b: 2
+      responses:
+        "200":
+          description: Sum of a and b
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultResponse"
+              example:
+                result: 12
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /api/subtract:
+    post:
+      summary: Subtract b from a
+      operationId: subtract
+      tags:
+        - calculator
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Operands"
+            example:
+              a: 10
+              b: 2
+      responses:
+        "200":
+          description: Difference a − b
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultResponse"
+              example:
+                result: 8
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /api/multiply:
+    post:
+      summary: Multiply two numbers
+      operationId: multiply
+      tags:
+        - calculator
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Operands"
+            example:
+              a: 10
+              b: 2
+      responses:
+        "200":
+          description: Product of a and b
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultResponse"
+              example:
+                result: 20
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /api/divide:
+    post:
+      summary: Divide a by b
+      operationId: divide
+      tags:
+        - calculator
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Operands"
+            example:
+              a: 10
+              b: 2
+      responses:
+        "200":
+          description: Quotient a ÷ b
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultResponse"
+              example:
+                result: 5
+        "400":
+          description: Invalid body or division by zero
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalidBody:
+                  value:
+                    error: invalid JSON body
+                divideByZero:
+                  value:
+                    error: division by zero
+components:
+  schemas:
+    Operands:
+      type: object
+      required:
+        - a
+        - b
+      properties:
+        a:
+          type: number
+          format: double
+          description: First operand
+        b:
+          type: number
+          format: double
+          description: Second operand
+    ResultResponse:
+      type: object
+      required:
+        - result
+      properties:
+        result:
+          type: number
+          format: double
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+    HealthResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: ok
+  responses:
+    BadRequest:
+      description: Invalid JSON body
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: invalid JSON body
