@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Calculator</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <h1>Calculator</h1>
+      <p class="subtitle">Operations run on the Go backend</p>
+
+      <form id="calc-form" class="calc">
+        <label>
+          A
+          <input id="a" name="a" type="number" step="any" value="10" required />
+        </label>
+        <label>
+          B
+          <input id="b" name="b" type="number" step="any" value="2" required />
+        </label>
+
+        <div class="ops" role="group" aria-label="Operations">
+          <button type="button" data-op="add">+</button>
+          <button type="button" data-op="subtract">−</button>
+          <button type="button" data-op="multiply">×</button>
+          <button type="button" data-op="divide">÷</button>
+        </div>
+      </form>
+
+      <p id="result" class="result" aria-live="polite">Result: —</p>
+      <p id="error" class="error" hidden></p>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

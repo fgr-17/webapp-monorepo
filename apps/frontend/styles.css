@@ -1,0 +1,118 @@
+:root {
+  color-scheme: light;
+  --bg: #e8eef4;
+  --surface: #f7fafc;
+  --ink: #1a2332;
+  --muted: #5a6b7d;
+  --accent: #0f6e56;
+  --accent-hover: #0b5744;
+  --error: #9b2c2c;
+  --border: #c5d0dc;
+  font-family: "Segoe UI", "IBM Plex Sans", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 15% 20%, #d4e4f5 0%, transparent 45%),
+    radial-gradient(circle at 85% 80%, #cfe8df 0%, transparent 40%),
+    var(--bg);
+  color: var(--ink);
+}
+
+.app {
+  width: min(100% - 2rem, 22rem);
+  padding: 1.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin: 0.35rem 0 1.25rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.calc {
+  display: grid;
+  gap: 0.85rem;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+input {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 1.05rem;
+  color: var(--ink);
+  background: #fff;
+}
+
+input:focus {
+  outline: 2px solid color-mix(in srgb, var(--accent) 45%, white);
+  outline-offset: 1px;
+}
+
+.ops {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+button {
+  padding: 0.7rem 0;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--accent-hover);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.result {
+  margin: 1.25rem 0 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.error {
+  margin: 0.5rem 0 0;
+  color: var(--error);
+  font-size: 0.9rem;
+}
