@@ -1,0 +1,13 @@
+{
+  "name": "webapp-monorepo-frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "test:coverage": "node --test --experimental-test-coverage",
+    "test:coverage:html": "c8 --include=calculator.js --exclude=**/*.test.js --reporter=text --reporter=html --reporter=lcov --reports-dir=coverage node --test"
+  },
+  "devDependencies": {
+    "c8": "^10.1.3"
+  }
+}

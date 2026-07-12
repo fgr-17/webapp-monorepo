@@ -1,0 +1,30 @@
+# Tooling containers for Go / Node — no host install required.
+# Not started by `docker compose up` (runtime stack). Use:
+#   docker compose -f docker-compose.tools.yml run --rm backend-tools ...
+#   ./scripts/test.sh
+#   ./scripts/coverage.sh
+
+services:
+  backend-tools:
+    image: golang:1.25-alpine
+    working_dir: /src
+    volumes:
+      - ./apps/backend:/src
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+    environment:
+      GOTOOLCHAIN: local
+    # Keep the container alive only while a command runs (`compose run`).
+
+  frontend-tools:
+    image: node:20-alpine
+    working_dir: /src
+    volumes:
+      - ./apps/frontend:/src
+      # Keep deps inside the volume so the bind mount does not hide node_modules.
+      - frontend-node-modules:/src/node_modules
+
+volumes:
+  go-mod-cache:
+  go-build-cache:
+  frontend-node-modules:
