@@ -10,6 +10,7 @@ You should **not** need to install Go or Node on your laptop. This repo provides
 |--------------|---------|
 | [`docker-compose.yml`](../docker-compose.yml) | Run the app (`frontend`, `backend`, `otel-lgtm`) |
 | [`docker-compose.tools.yml`](../docker-compose.tools.yml) | Dev/test toolchains (`backend-tools`, `frontend-tools`) |
+| [`docker-compose.e2e.yml`](../docker-compose.e2e.yml) | Browser e2e (`chrome` + Behave `e2e`) |
 
 ```mermaid
 flowchart TB
@@ -38,6 +39,7 @@ From the repo root:
 ```bash
 ./scripts/test.sh              # unit tests in tool containers
 ./scripts/coverage.sh          # HTML reports under coverage/
+./scripts/e2e.sh               # Behave + Selenium against the running stack
 ./scripts/dev-shell.sh backend # interactive Go shell
 ./scripts/dev-shell.sh frontend
 ```
@@ -99,3 +101,13 @@ Open the HTML files in a browser on your host (they are written to a bind-mounte
 3. `./scripts/coverage.sh` when you care about %.
 4. `docker compose up --build` to run the real app stack.
 5. CI can call the same scripts — only Docker is required on the runner.
+
+## E2E (Behave + Selenium)
+
+See **[apps/e2e/README.md](../apps/e2e/README.md)**. Short version:
+
+```bash
+./scripts/e2e.sh
+```
+
+This starts the app stack, a Chromium Selenium node, and a Python Behave runner that clicks through the calculator UI.
