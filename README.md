@@ -2,17 +2,13 @@
 
 Minimal frontend/backend monorepo template: a calculator UI talking to a Go REST API, each service in its own container.
 
-## Why REST (not gRPC)
-
-REST + JSON is the better fit for this template: browsers call it with `fetch`, curl debugging is trivial, and there is no need for protobuf tooling or a grpc-web proxy. Prefer gRPC when you have service-to-service traffic, strong contracts, and streaming — not a browser calculator.
-
 ## Layout
 
 ```
 webapp-monorepo/
   apps/
     frontend/     # static HTML/CSS/JS + nginx
-    backend/      # Go REST API
+    backend/      # Go REST API + OpenTelemetry
   docker-compose.yml
 ```
 
@@ -25,8 +21,25 @@ docker compose up --build
 - UI: http://localhost:8085 (host port mapped in `docker-compose.yml`)
 - API (direct): http://localhost:8081
 - Swagger UI: http://localhost:8081/swagger/ (also via frontend proxy at `/swagger/`)
+- Observability (Grafana LGTM): http://localhost:3000 — traces (Tempo), metrics (Prometheus), logs (Loki)
 
 The frontend nginx proxies `/api/*`, `/swagger/`, and `/openapi.yaml` to the backend.
+
+## Observability (OpenTelemetry)
+
+The backend exports **traces**, **metrics**, and **logs** via OTLP/HTTP when `OTEL_EXPORTER_OTLP_ENDPOINT` is set.
+
+Compose includes [`grafana/otel-lgtm`](https://github.com/grafana/docker9-otel-lgtm): an all-in-one stack (Grafana + Tempo + Loki + Prometheus) that receives OTLP on `:4317`/`:4318`.
+
+| Signal | What is emitted |
+|--------|-----------------|
+| Traces | HTTP spans (`otelhttp`) + `calc.{add,subtract,multiply,divide}` spans with operands/result |
+| Metrics | `calculator.operations` counter, `calculator.operation.duration` histogram (by operation/status); HTTP metrics from instrumentation |
+| Logs | Structured `slog` bridged to OTel logs (correlated with trace context) |
+
+In Grafana Explore: use **Tempo** for traces, **Prometheus** for metrics (`calculator_operations_*`), **Loki** for logs. `/health` is excluded from HTTP tracing to reduce noise.
+
+Without `OTEL_EXPORTER_OTLP_ENDPOINT`, telemetry setup is a no-op and logs go to stdout as JSON.
 
 ## API
 
@@ -69,8 +82,13 @@ curl -s -X POST http://localhost:8081/api/divide \
 ```bash
 cd apps/backend
 go test ./...
+# optional: point at a local OTLP collector (Compose LGTM on :4318)
+export OTEL_SERVICE_NAME=calculator-backend
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
 go run ./cmd/server
 ```
+
+Without `OTEL_EXPORTER_OTLP_ENDPOINT`, exporters are disabled and logs still print as JSON to stdout.
 
 ## Frontend without Docker
 
