@@ -1,0 +1,21 @@
+services:
+  backend:
+    build: ./apps/backend
+    ports:
+      - "8081:8081"
+    environment:
+      PORT: "8081"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8081/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+
+  frontend:
+    build: ./apps/frontend
+    ports:
+      - "8085:80"
+    depends_on:
+      backend:
+        condition: service_healthy
