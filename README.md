@@ -22,18 +22,21 @@ webapp-monorepo/
 docker compose up --build
 ```
 
-- UI: http://localhost:8080
+- UI: http://localhost:8085 (host port mapped in `docker-compose.yml`)
 - API (direct): http://localhost:8081
+- Swagger UI: http://localhost:8081/swagger/ (also via frontend proxy at `/swagger/`)
 
-The frontend nginx proxies `/api/*` to the backend, so the browser only needs port 8080.
+The frontend nginx proxies `/api/*`, `/swagger/`, and `/openapi.yaml` to the backend.
 
 ## API
 
-All operation endpoints accept `POST` with JSON body `{"a": number, "b": number}` and return `{"result": number}`.
+All operation endpoints accept `POST` with JSON body `{"a": number, "b": number}` and return `{"result": number}`. Interactive docs live at `/swagger/` (OpenAPI spec at `/openapi.yaml`).
 
 | Method | Path | Operation |
 |--------|------|-----------|
 | GET | `/health` | Health check |
+| GET | `/swagger/` | Swagger UI |
+| GET | `/openapi.yaml` | OpenAPI 3 spec |
 | POST | `/api/add` | a + b |
 | POST | `/api/subtract` | a − b |
 | POST | `/api/multiply` | a × b |

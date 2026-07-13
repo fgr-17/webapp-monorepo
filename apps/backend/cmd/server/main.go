@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/zigglib/webapp-monorepo/backend/api"
 	"github.com/zigglib/webapp-monorepo/backend/internal/calc"
 )
 
@@ -25,6 +26,10 @@ type errorResponse struct {
 
 func main() {
 	mux := http.NewServeMux()
+	docs := api.Handler()
+	mux.Handle("GET /openapi.yaml", docs)
+	mux.Handle("GET /swagger", docs)
+	mux.Handle("GET /swagger/", docs)
 	mux.HandleFunc("GET /health", handleHealth)
 	mux.HandleFunc("POST /api/add", handleOp(func(a, b float64) (float64, error) {
 		return calc.Add(a, b), nil
