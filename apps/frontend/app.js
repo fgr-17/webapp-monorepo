@@ -18,7 +18,7 @@ function setResult(text) {
 }
 
 function setError(message) {
-  if (message == null) {
+  if (message === null) {
     errorEl.hidden = true;
     errorEl.textContent = "";
     return;

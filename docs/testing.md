@@ -38,6 +38,8 @@ From the repo root:
 
 ```bash
 ./scripts/test.sh              # unit tests in tool containers
+./scripts/lint.sh              # Go + JS lint/style checks
+./scripts/lint.sh --fix       # auto-fix
 ./scripts/coverage.sh          # HTML reports under coverage/
 ./scripts/e2e.sh               # Behave + Selenium against the running stack
 ./scripts/dev-shell.sh backend # interactive Go shell
@@ -84,6 +86,24 @@ docker compose -p webapp-monorepo-tools -f docker-compose.tools.yml run --rm fro
 
 Open the HTML files in a browser on your host (they are written to a bind-mounted folder).
 
+## Lint & style
+
+```bash
+make fix                   # apply style, then confirm lint is green
+make lint                  # check only (CI / pre-build gate)
+./scripts/lint.sh          # same as make lint
+./scripts/lint.sh --fix   # same as make fix
+```
+
+`make build` **requires** green lint first, and the runtime Dockerfiles also re-run quality checks while building images.
+
+| Side | Tools | Config |
+|------|-------|--------|
+| Backend | `gofmt`, `goimports`, **golangci-lint** | [`apps/backend/.golangci.yml`](../apps/backend/.golangci.yml) |
+| Frontend | **ESLint** + **Prettier** | [`apps/frontend/eslint.config.js`](../apps/frontend/eslint.config.js), [`.prettierrc.json`](../apps/frontend/.prettierrc.json) |
+
+The `backend-tools` image is built from [`apps/backend/Dockerfile.tools`](../apps/backend/Dockerfile.tools) (Go + golangci-lint + goimports).
+
 ## What is covered
 
 | Area | Tests live in | Notes |
@@ -97,7 +117,7 @@ Open the HTML files in a browser on your host (they are written to a bind-mounte
 ## Typical workflow
 
 1. Edit code on the host (bind-mounted into tool containers).
-2. `./scripts/test.sh` for fast feedback (Docker tools).
+2. `./scripts/lint.sh` then `./scripts/test.sh` for fast feedback.
 3. `./scripts/coverage.sh` when you care about %.
 4. `docker compose up --build` to run the real app stack.
 5. CI can call the same scripts — only Docker is required on the runner.

@@ -11,14 +11,15 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/zigglib/webapp-monorepo/backend/api"
-	"github.com/zigglib/webapp-monorepo/backend/internal/calc"
-	"github.com/zigglib/webapp-monorepo/backend/internal/telemetry"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
+
+	"github.com/zigglib/webapp-monorepo/backend/api"
+	"github.com/zigglib/webapp-monorepo/backend/internal/calc"
+	"github.com/zigglib/webapp-monorepo/backend/internal/telemetry"
 )
 
 type operands struct {

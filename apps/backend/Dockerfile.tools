@@ -1,0 +1,9 @@
+FROM golang:1.25-alpine
+
+RUN apk add --no-cache git curl \
+  && curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh \
+    | sh -s -- -b /usr/local/bin v2.12.2 \
+  && go install golang.org/x/tools/cmd/goimports@v0.30.0
+
+ENV PATH="/go/bin:${PATH}"
+WORKDIR /src

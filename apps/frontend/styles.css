@@ -22,8 +22,7 @@ body {
   place-items: center;
   background:
     radial-gradient(circle at 15% 20%, #d4e4f5 0%, transparent 45%),
-    radial-gradient(circle at 85% 80%, #cfe8df 0%, transparent 40%),
-    var(--bg);
+    radial-gradient(circle at 85% 80%, #cfe8df 0%, transparent 40%), var(--bg);
   color: var(--ink);
 }
 

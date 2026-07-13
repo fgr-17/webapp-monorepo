@@ -13,7 +13,8 @@ webapp-monorepo/
   docker-compose.yml       # runtime: app + Grafana LGTM
   docker-compose.tools.yml # dev tools: Go + Node containers
   docker-compose.e2e.yml   # chrome + behave runner
-  scripts/                 # test, coverage, e2e, dev-shell helpers
+  scripts/                 # test, lint, coverage, e2e, build helpers
+  Makefile                 # make fix | lint | build | up | test | e2e
 ```
 
 ## Run with Docker Compose
@@ -38,6 +39,28 @@ The frontend nginx proxies `/api/*`, `/swagger/`, and `/openapi.yaml` to the bac
 | Testing & coverage | [docs/testing.md](docs/testing.md) |
 | E2E (Behave + Selenium) | [apps/e2e/README.md](apps/e2e/README.md) |
 
+## Build & quality gates
+
+Preferred workflow (Docker only on the host):
+
+```bash
+make fix      # apply style, then verify linters are green
+make lint     # check only (fails if style/lint is dirty)
+make build    # requires green lint, then builds images (Dockerfiles re-check too)
+make up       # make build && docker compose up -d
+make test     # unit tests
+make e2e      # Behave + Selenium
+```
+
+| Step | What happens |
+|------|----------------|
+| `make fix` | Auto-format (gofmt/goimports, ESLint `--fix`, Prettier) + lint must end green |
+| `make lint` | Style **check** + golangci-lint / ESLint (no rewrite); must be all green |
+| `make build` | Runs `make lint`, then `docker compose build` |
+| Image build | Backend/frontend Dockerfiles run the same quality gates before shipping the image |
+
+So you cannot ship a bundle with failing lint: both the Makefile and the Dockerfiles enforce it. If lint fails, run `make fix` and re-commit.
+
 ## Testing & coverage
 
 Full guide: **[docs/testing.md](docs/testing.md)**.
@@ -46,12 +69,15 @@ You do **not** need Go or Node on the host. Tests/coverage run in **tool contain
 
 ```bash
 ./scripts/test.sh                 # Go + Node unit tests in containers
+./scripts/lint.sh                 # golangci-lint + ESLint/Prettier
+./scripts/lint.sh --fix          # auto-fix style where possible
 ./scripts/coverage.sh             # → coverage/backend.html, coverage/frontend/index.html
 ./scripts/dev-shell.sh backend    # interactive Go toolchain
 ./scripts/dev-shell.sh frontend   # interactive Node toolchain
 
 # optional if you already have Go/Node installed locally
 ./scripts/test.sh --host
+./scripts/lint.sh --host
 ./scripts/coverage.sh --host
 ```
 
