@@ -25,25 +25,26 @@ docker compose up --build
 
 The frontend nginx proxies `/api/*`, `/swagger/`, and `/openapi.yaml` to the backend.
 
+## Docs
+
+| Topic | Guide |
+|-------|--------|
+| Swagger / OpenAPI | [apps/backend/api/README.md](apps/backend/api/README.md) |
+| Telemetry (OpenTelemetry) | [apps/backend/internal/telemetry/README.md](apps/backend/internal/telemetry/README.md) |
+
 ## Observability (OpenTelemetry)
 
-The backend exports **traces**, **metrics**, and **logs** via OTLP/HTTP when `OTEL_EXPORTER_OTLP_ENDPOINT` is set.
+Short summary — full newbie guide with diagrams: **[telemetry README](apps/backend/internal/telemetry/README.md)**.
 
-Compose includes [`grafana/otel-lgtm`](https://github.com/grafana/docker9-otel-lgtm): an all-in-one stack (Grafana + Tempo + Loki + Prometheus) that receives OTLP on `:4317`/`:4318`.
+The backend exports **traces**, **metrics**, and **logs** via OTLP/HTTP when `OTEL_EXPORTER_OTLP_ENDPOINT` is set. Compose includes [`grafana/otel-lgtm`](https://github.com/grafana/docker-otel-lgtm) (Grafana + Tempo + Loki + Prometheus).
 
-| Signal | What is emitted |
-|--------|-----------------|
-| Traces | HTTP spans (`otelhttp`) + `calc.{add,subtract,multiply,divide}` spans with operands/result |
-| Metrics | `calculator.operations` counter, `calculator.operation.duration` histogram (by operation/status); HTTP metrics from instrumentation |
-| Logs | Structured `slog` bridged to OTel logs (correlated with trace context) |
+In Grafana use **Explore** (not empty Starred dashboards): Tempo / Prometheus / Loki. Without the OTLP endpoint, exporters are off and logs go to stdout as JSON.
 
-In Grafana Explore: use **Tempo** for traces, **Prometheus** for metrics (`calculator_operations_*`), **Loki** for logs. `/health` is excluded from HTTP tracing to reduce noise.
+## API & Swagger
 
-Without `OTEL_EXPORTER_OTLP_ENDPOINT`, telemetry setup is a no-op and logs go to stdout as JSON.
+Short summary — full newbie guide with diagrams: **[Swagger README](apps/backend/api/README.md)**.
 
-## API
-
-All operation endpoints accept `POST` with JSON body `{"a": number, "b": number}` and return `{"result": number}`. Interactive docs live at `/swagger/` (OpenAPI spec at `/openapi.yaml`).
+All operation endpoints accept `POST` with JSON body `{"a": number, "b": number}` and return `{"result": number}`. Interactive docs: `/swagger/` (spec: `/openapi.yaml`).
 
 | Method | Path | Operation |
 |--------|------|-----------|
