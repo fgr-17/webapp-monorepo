@@ -5,6 +5,12 @@ services:
       - "8081:8081"
     environment:
       PORT: "8081"
+      OTEL_SERVICE_NAME: calculator-backend
+      # Prefer host:port without scheme; SDK adds http:// for OTLP/HTTP.
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-lgtm:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+    depends_on:
+      - otel-lgtm
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8081/health"]
       interval: 5s
@@ -19,3 +25,14 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+
+  # All-in-one OTel backend: Grafana + Tempo (traces) + Loki (logs) + Prometheus (metrics)
+  otel-lgtm:
+    image: grafana/otel-lgtm:0.8.1
+    ports:
+      - "3000:3000"   # Grafana UI
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
