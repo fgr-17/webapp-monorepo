@@ -35,9 +35,9 @@ type errorResponse struct {
 }
 
 var (
-	tracer           = otel.Tracer("calculator")
-	opsCounter       metric.Int64Counter
-	opsDuration      metric.Float64Histogram
+	tracer      = otel.Tracer("calculator")
+	opsCounter  metric.Int64Counter
+	opsDuration metric.Float64Histogram
 )
 
 func main() {
@@ -57,49 +57,12 @@ func main() {
 		}
 	}()
 
-	meter := otel.Meter("calculator")
-	opsCounter, err = meter.Int64Counter(
-		"calculator.operations",
-		metric.WithDescription("Number of calculator operations"),
-		metric.WithUnit("{operation}"),
-	)
-	if err != nil {
-		slog.Error("create operations counter", "error", err)
-		os.Exit(1)
-	}
-	opsDuration, err = meter.Float64Histogram(
-		"calculator.operation.duration",
-		metric.WithDescription("Calculator operation latency"),
-		metric.WithUnit("ms"),
-	)
-	if err != nil {
-		slog.Error("create operations histogram", "error", err)
+	if err := initMetrics(); err != nil {
+		slog.Error("metrics init failed", "error", err)
 		os.Exit(1)
 	}
 
-	mux := http.NewServeMux()
-	docs := api.Handler()
-	mux.Handle("GET /openapi.yaml", docs)
-	mux.Handle("GET /swagger", docs)
-	mux.Handle("GET /swagger/", docs)
-	mux.HandleFunc("GET /health", handleHealth)
-	mux.Handle("POST /api/add", handleOp("add", func(a, b float64) (float64, error) {
-		return calc.Add(a, b), nil
-	}))
-	mux.Handle("POST /api/subtract", handleOp("subtract", func(a, b float64) (float64, error) {
-		return calc.Subtract(a, b), nil
-	}))
-	mux.Handle("POST /api/multiply", handleOp("multiply", func(a, b float64) (float64, error) {
-		return calc.Multiply(a, b), nil
-	}))
-	mux.Handle("POST /api/divide", handleOp("divide", calc.Divide))
-
-	handler := withCORS(otelhttp.NewHandler(mux, "calculator-backend",
-		otelhttp.WithFilter(func(r *http.Request) bool {
-			return r.URL.Path != "/health"
-		}),
-	))
-
+	handler := newHandler()
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8081"
@@ -121,6 +84,50 @@ func main() {
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		slog.Error("server shutdown failed", "error", err)
 	}
+}
+
+func initMetrics() error {
+	meter := otel.Meter("calculator")
+	var err error
+	opsCounter, err = meter.Int64Counter(
+		"calculator.operations",
+		metric.WithDescription("Number of calculator operations"),
+		metric.WithUnit("{operation}"),
+	)
+	if err != nil {
+		return err
+	}
+	opsDuration, err = meter.Float64Histogram(
+		"calculator.operation.duration",
+		metric.WithDescription("Calculator operation latency"),
+		metric.WithUnit("ms"),
+	)
+	return err
+}
+
+func newHandler() http.Handler {
+	mux := http.NewServeMux()
+	docs := api.Handler()
+	mux.Handle("GET /openapi.yaml", docs)
+	mux.Handle("GET /swagger", docs)
+	mux.Handle("GET /swagger/", docs)
+	mux.HandleFunc("GET /health", handleHealth)
+	mux.Handle("POST /api/add", handleOp("add", func(a, b float64) (float64, error) {
+		return calc.Add(a, b), nil
+	}))
+	mux.Handle("POST /api/subtract", handleOp("subtract", func(a, b float64) (float64, error) {
+		return calc.Subtract(a, b), nil
+	}))
+	mux.Handle("POST /api/multiply", handleOp("multiply", func(a, b float64) (float64, error) {
+		return calc.Multiply(a, b), nil
+	}))
+	mux.Handle("POST /api/divide", handleOp("divide", calc.Divide))
+
+	return withCORS(otelhttp.NewHandler(mux, "calculator-backend",
+		otelhttp.WithFilter(func(r *http.Request) bool {
+			return r.URL.Path != "/health"
+		}),
+	))
 }
 
 func handleHealth(w http.ResponseWriter, r *http.Request) {
@@ -179,6 +186,9 @@ func handleOp(name string, op func(a, b float64) (float64, error)) http.Handler 
 }
 
 func recordOp(ctx context.Context, name, status string, start time.Time) {
+	if opsCounter == nil || opsDuration == nil {
+		return
+	}
 	attrs := metric.WithAttributes(
 		attribute.String("operation", name),
 		attribute.String("status", status),

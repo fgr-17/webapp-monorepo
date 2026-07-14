@@ -7,9 +7,11 @@ Minimal frontend/backend monorepo template: a calculator UI talking to a Go REST
 ```
 webapp-monorepo/
   apps/
-    frontend/     # static HTML/CSS/JS + nginx
-    backend/      # Go REST API + OpenTelemetry
-  docker-compose.yml
+    frontend/              # static HTML/CSS/JS + nginx
+    backend/               # Go REST API + OpenTelemetry
+  docker-compose.yml       # runtime: app + Grafana LGTM
+  docker-compose.tools.yml # dev tools: Go + Node containers
+  scripts/                 # test, coverage, dev-shell helpers
 ```
 
 ## Run with Docker Compose
@@ -31,6 +33,24 @@ The frontend nginx proxies `/api/*`, `/swagger/`, and `/openapi.yaml` to the bac
 |-------|--------|
 | Swagger / OpenAPI | [apps/backend/api/README.md](apps/backend/api/README.md) |
 | Telemetry (OpenTelemetry) | [apps/backend/internal/telemetry/README.md](apps/backend/internal/telemetry/README.md) |
+| Testing & coverage | [docs/testing.md](docs/testing.md) |
+
+## Testing & coverage
+
+Full guide: **[docs/testing.md](docs/testing.md)**.
+
+You do **not** need Go or Node on the host. Tests/coverage run in **tool containers** (`docker-compose.tools.yml`), separate from the app containers started by `docker compose up`.
+
+```bash
+./scripts/test.sh                 # Go + Node tests in containers
+./scripts/coverage.sh             # → coverage/backend.html, coverage/frontend/index.html
+./scripts/dev-shell.sh backend    # interactive Go toolchain
+./scripts/dev-shell.sh frontend   # interactive Node toolchain
+
+# optional if you already have Go/Node installed locally
+./scripts/test.sh --host
+./scripts/coverage.sh --host
+```
 
 ## Observability (OpenTelemetry)
 

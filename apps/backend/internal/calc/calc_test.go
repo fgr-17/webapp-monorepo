@@ -5,40 +5,54 @@ import (
 	"testing"
 )
 
-func TestAdd(t *testing.T) {
-	got := Add(2, 3)
-	if got != 5 {
-		t.Fatalf("Add(2, 3) = %v, want 5", got)
+func TestOperations(t *testing.T) {
+	tests := []struct {
+		name    string
+		op      string
+		a, b    float64
+		want    float64
+		wantErr error
+	}{
+		{name: "add_positive", op: "add", a: 2, b: 3, want: 5},
+		{name: "add_negative", op: "add", a: -2, b: 5, want: 3},
+		{name: "subtract", op: "subtract", a: 10, b: 4, want: 6},
+		{name: "multiply", op: "multiply", a: 3, b: 4, want: 12},
+		{name: "multiply_zero", op: "multiply", a: 3, b: 0, want: 0},
+		{name: "divide", op: "divide", a: 10, b: 4, want: 2.5},
+		{name: "divide_by_zero", op: "divide", a: 1, b: 0, wantErr: ErrDivideByZero},
 	}
-}
 
-func TestSubtract(t *testing.T) {
-	got := Subtract(10, 4)
-	if got != 6 {
-		t.Fatalf("Subtract(10, 4) = %v, want 6", got)
-	}
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				got float64
+				err error
+			)
+			switch tt.op {
+			case "add":
+				got = Add(tt.a, tt.b)
+			case "subtract":
+				got = Subtract(tt.a, tt.b)
+			case "multiply":
+				got = Multiply(tt.a, tt.b)
+			case "divide":
+				got, err = Divide(tt.a, tt.b)
+			default:
+				t.Fatalf("unknown op %q", tt.op)
+			}
 
-func TestMultiply(t *testing.T) {
-	got := Multiply(3, 4)
-	if got != 12 {
-		t.Fatalf("Multiply(3, 4) = %v, want 12", got)
-	}
-}
-
-func TestDivide(t *testing.T) {
-	got, err := Divide(10, 4)
-	if err != nil {
-		t.Fatalf("Divide(10, 4) unexpected error: %v", err)
-	}
-	if got != 2.5 {
-		t.Fatalf("Divide(10, 4) = %v, want 2.5", got)
-	}
-}
-
-func TestDivideByZero(t *testing.T) {
-	_, err := Divide(1, 0)
-	if !errors.Is(err, ErrDivideByZero) {
-		t.Fatalf("Divide(1, 0) error = %v, want ErrDivideByZero", err)
+			if tt.wantErr != nil {
+				if !errors.Is(err, tt.wantErr) {
+					t.Fatalf("error = %v, want %v", err, tt.wantErr)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got != tt.want {
+				t.Fatalf("got %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

@@ -16,6 +16,9 @@
 coverage.*
 *.coverprofile
 profile.cov
+coverage/
+apps/backend/coverage/
+apps/frontend/coverage/
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
@@ -33,4 +36,7 @@ go.work.sum
 
 # Local build artifacts
 apps/backend/server
+
+# Frontend
+apps/frontend/node_modules/
 
