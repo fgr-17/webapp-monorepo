@@ -6,15 +6,17 @@
 
 services:
   backend-tools:
-    image: golang:1.25-alpine
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile.tools
     working_dir: /src
     volumes:
       - ./apps/backend:/src
       - go-mod-cache:/go/pkg/mod
       - go-build-cache:/root/.cache/go-build
+      - go-lint-cache:/root/.cache/golangci-lint
     environment:
       GOTOOLCHAIN: local
-    # Keep the container alive only while a command runs (`compose run`).
 
   frontend-tools:
     image: node:20-alpine
@@ -27,4 +29,5 @@ services:
 volumes:
   go-mod-cache:
   go-build-cache:
+  go-lint-cache:
   frontend-node-modules:
