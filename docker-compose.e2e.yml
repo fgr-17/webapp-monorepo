@@ -1,0 +1,25 @@
+# E2E stack: Selenium browser + Behave runner.
+# Use with the runtime compose file so frontend/backend are on the same network:
+#   docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm e2e
+# Or: ./scripts/e2e.sh
+
+services:
+  chrome:
+    image: selenium/standalone-chromium:4.27.0
+    shm_size: "2gb"
+    environment:
+      SE_NODE_MAX_SESSIONS: "2"
+      SE_NODE_OVERRIDE_MAX_SESSIONS: "true"
+
+  e2e:
+    build: ./apps/e2e
+    environment:
+      BASE_URL: http://frontend
+      SELENIUM_REMOTE_URL: http://chrome:4444/wd/hub
+    depends_on:
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_healthy
+      chrome:
+        condition: service_started
