@@ -35,3 +35,17 @@ def assert_error_contains(context, snippet):
     assert context.page.error_visible(), "expected error to be visible"
     text = context.page.error_text()
     assert snippet in text, f"error text={text!r}, missing {snippet!r}"
+
+
+@then('the history should contain "{snippet}"')
+def assert_history_contains(context, snippet):
+    context.page.wait_for_history_containing(snippet)
+    texts = context.page.history_texts()
+    assert any(snippet in text for text in texts), (
+        f"history={texts!r}, missing {snippet!r}"
+    )
+
+
+@then("the history section should be visible")
+def assert_history_section_visible(context):
+    assert context.page.history_section_visible(), "expected history section"

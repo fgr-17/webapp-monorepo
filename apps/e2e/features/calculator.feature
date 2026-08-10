@@ -14,7 +14,7 @@ Feature: Calculator web UI
 
     Examples:
       | a  | b | op       | result |
-      | 10 | 2 | add     | 12     |
+      | 10 | 2 | add      | 12     |
       | 10 | 2 | subtract | 8      |
       | 10 | 2 | multiply | 20     |
       | 10 | 2 | divide   | 5      |
@@ -30,3 +30,15 @@ Feature: Calculator web UI
     And I click the "multiply" operation
     Then the result should show "20"
     And no error should be visible
+    
+  Scenario: Successful add appears in history
+    When I set operand A to "10" and B to "2"
+    And I click the "add" operation
+    Then the result should show "12"
+    And the history should contain "10 + 2 = 12"
+
+  Scenario: Division by zero still shows the calculator error
+    When I set operand A to "10" and B to "0"
+    And I click the "divide" operation
+    Then an error containing "division by zero" should be visible
+    And the history section should be visible
