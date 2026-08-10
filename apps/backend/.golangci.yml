@@ -50,7 +50,7 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - github.com/zigglib/webapp-monorepo/backend
+        - github.com/fgr-17/webapp-monorepo/backend
 
 issues:
   max-issues-per-linter: 0

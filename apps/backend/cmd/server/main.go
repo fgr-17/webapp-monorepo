@@ -17,9 +17,10 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
 
-	"github.com/zigglib/webapp-monorepo/backend/api"
-	"github.com/zigglib/webapp-monorepo/backend/internal/calc"
-	"github.com/zigglib/webapp-monorepo/backend/internal/telemetry"
+	"github.com/fgr-17/webapp-monorepo/backend/api"
+	"github.com/fgr-17/webapp-monorepo/backend/internal/calc"
+	"github.com/fgr-17/webapp-monorepo/backend/internal/history"
+	"github.com/fgr-17/webapp-monorepo/backend/internal/telemetry"
 )
 
 type operands struct {
@@ -107,22 +108,27 @@ func initMetrics() error {
 }
 
 func newHandler() http.Handler {
+	return newHandlerWithHistory(history.New(11))
+}
+
+func newHandlerWithHistory(hist *history.Store) http.Handler {
 	mux := http.NewServeMux()
 	docs := api.Handler()
 	mux.Handle("GET /openapi.yaml", docs)
 	mux.Handle("GET /swagger", docs)
 	mux.Handle("GET /swagger/", docs)
 	mux.HandleFunc("GET /health", handleHealth)
-	mux.Handle("POST /api/add", handleOp("add", func(a, b float64) (float64, error) {
+	mux.HandleFunc("GET /api/history", handleHistory(hist))
+	mux.Handle("POST /api/add", handleOp(hist, "add", func(a, b float64) (float64, error) {
 		return calc.Add(a, b), nil
 	}))
-	mux.Handle("POST /api/subtract", handleOp("subtract", func(a, b float64) (float64, error) {
+	mux.Handle("POST /api/subtract", handleOp(hist, "subtract", func(a, b float64) (float64, error) {
 		return calc.Subtract(a, b), nil
 	}))
-	mux.Handle("POST /api/multiply", handleOp("multiply", func(a, b float64) (float64, error) {
+	mux.Handle("POST /api/multiply", handleOp(hist, "multiply", func(a, b float64) (float64, error) {
 		return calc.Multiply(a, b), nil
 	}))
-	mux.Handle("POST /api/divide", handleOp("divide", calc.Divide))
+	mux.Handle("POST /api/divide", handleOp(hist, "divide", calc.Divide))
 
 	return withCORS(otelhttp.NewHandler(mux, "calculator-backend",
 		otelhttp.WithFilter(func(r *http.Request) bool {
@@ -131,12 +137,26 @@ func newHandler() http.Handler {
 	))
 }
 
+func handleHistory(hist *history.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		entries := hist.List()
+		if entries == nil {
+			entries = []history.Entry{}
+		}
+		for i, j := 0, len(entries)-1; i < j; i, j = i+1, j-1 {
+			entries[i], entries[j] = entries[j], entries[i]
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(entries)
+	}
+}
+
 func handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
 
-func handleOp(name string, op func(a, b float64) (float64, error)) http.Handler {
+func handleOp(hist *history.Store, name string, op func(a, b float64) (float64, error)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := tracer.Start(r.Context(), "calc."+name)
 		defer span.End()
@@ -165,12 +185,15 @@ func handleOp(name string, op func(a, b float64) (float64, error)) http.Handler 
 			recordOp(ctx, name, "error", start)
 			slog.WarnContext(ctx, "operation failed", "operation", name, "error", err)
 			if errors.Is(err, calc.ErrDivideByZero) {
+				hist.Add(name, in.A, in.B, 0, time.Now().UTC())
 				writeError(w, http.StatusBadRequest, err.Error())
 				return
 			}
 			writeError(w, http.StatusInternalServerError, "operation failed")
 			return
 		}
+
+		hist.Add(name, in.A, in.B, result, time.Now().UTC())
 
 		span.SetAttributes(attribute.Float64("calc.result", result))
 		recordOp(ctx, name, "ok", start)

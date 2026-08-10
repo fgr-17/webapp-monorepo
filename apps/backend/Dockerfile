@@ -17,7 +17,7 @@ RUN unformatted="$(gofmt -l .)" \
   && if [ -n "$unformatted" ]; then \
        echo "gofmt needed on:" >&2; echo "$unformatted" >&2; exit 1; \
      fi
-RUN bad="$(goimports -l -local github.com/zigglib/webapp-monorepo/backend .)" \
+RUN bad="$(goimports -l -local github.com/fgr-17/webapp-monorepo/backend .)" \
   && if [ -n "$bad" ]; then \
        echo "goimports needed on:" >&2; echo "$bad" >&2; exit 1; \
      fi

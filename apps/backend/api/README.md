@@ -13,7 +13,7 @@ We keep a hand-written OpenAPI 3 file and serve Swagger UI from the Go backend. 
 
 | Piece | Role |
 |-------|------|
-| [`openapi.yaml`](openapi.yaml) | Contract: `/health` + four calculator `POST`s |
+| [`openapi.yaml`](openapi.yaml) | Contract: `/health`, calculator `POST`s, and `GET /api/history` |
 | [`swagger.html`](swagger.html) | HTML page that loads Swagger UI from a CDN and points it at `/openapi.yaml` |
 | [`docs.go`](docs.go) | Embeds those files into the binary (`//go:embed`) and serves them over HTTP |
 | Frontend `nginx.conf` | Proxies `/swagger/` and `/openapi.yaml` to the backend so one host can reach docs |
