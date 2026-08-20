@@ -185,7 +185,6 @@ func handleOp(hist *history.Store, name string, op func(a, b float64) (float64, 
 			recordOp(ctx, name, "error", start)
 			slog.WarnContext(ctx, "operation failed", "operation", name, "error", err)
 			if errors.Is(err, calc.ErrDivideByZero) {
-				hist.Add(name, in.A, in.B, 0, time.Now().UTC())
 				writeError(w, http.StatusBadRequest, err.Error())
 				return
 			}
