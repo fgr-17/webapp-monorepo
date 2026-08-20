@@ -37,8 +37,9 @@ Feature: Calculator web UI
     Then the result should show "12"
     And the history should contain "10 + 2 = 12"
 
-  Scenario: Division by zero still shows the calculator error
+  Scenario: Division by zero does not add a history row
     When I set operand A to "10" and B to "0"
     And I click the "divide" operation
     Then an error containing "division by zero" should be visible
-    And the history section should be visible
+    And the result should show "—"
+    And the history should not contain "10 ÷ 0 = 0"

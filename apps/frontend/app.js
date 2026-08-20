@@ -52,13 +52,6 @@ async function loadHistory() {
   }
 }
 
-function appendOptimisticFailure({ op, a, b }) {
-  historyEmptyEl.hidden = true;
-  const li = document.createElement("li");
-  li.textContent = formatHistoryRow({ op, a, b, result: 0 });
-  historyListEl.prepend(li);
-}
-
 buttons.forEach((btn) => {
   btn.addEventListener("click", () => {
     runOperation({
@@ -69,7 +62,6 @@ buttons.forEach((btn) => {
       setResult,
       setError,
       onSuccess: loadHistory,
-      onFailure: appendOptimisticFailure,
     });
   });
 });
