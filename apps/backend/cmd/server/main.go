@@ -108,7 +108,7 @@ func initMetrics() error {
 }
 
 func newHandler() http.Handler {
-	return newHandlerWithHistory(history.New(11))
+	return newHandlerWithHistory(history.New(history.DefaultCap))
 }
 
 func newHandlerWithHistory(hist *history.Store) http.Handler {
