@@ -143,9 +143,6 @@ func handleHistory(hist *history.Store) http.HandlerFunc {
 		if entries == nil {
 			entries = []history.Entry{}
 		}
-		for i, j := 0, len(entries)-1; i < j; i, j = i+1, j-1 {
-			entries[i], entries[j] = entries[j], entries[i]
-		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(entries)
 	}
