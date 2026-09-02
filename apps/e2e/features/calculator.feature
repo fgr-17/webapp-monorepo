@@ -24,3 +24,9 @@ Feature: Calculator web UI
     And I click the "divide" operation
     Then an error containing "division by zero" should be visible
     And the result should show "—"
+
+  Scenario: Multiply shows correct result
+    When I set operand A to "4" and B to "5"
+    And I click the "multiply" operation
+    Then the result should show "20"
+    And no error should be visible
