@@ -109,8 +109,12 @@ func TestSwaggerAndOpenAPI(t *testing.T) {
 		if rr.Code != http.StatusOK {
 			t.Fatalf("status = %d, want %d", rr.Code, http.StatusOK)
 		}
-		if !strings.Contains(rr.Body.String(), "openapi:") {
+		body := rr.Body.String()
+		if !strings.Contains(body, "openapi:") {
 			t.Fatalf("body missing openapi header")
+		}
+		if !strings.Contains(body, "/api/history") {
+			t.Fatalf("body missing /api/history")
 		}
 	})
 
@@ -137,4 +141,94 @@ func TestSwaggerAndOpenAPI(t *testing.T) {
 			t.Fatalf("Location = %q, want /swagger/", loc)
 		}
 	})
+}
+
+func TestHistoryEmpty(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/history", nil)
+	rr := httptest.NewRecorder()
+	newHandler().ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", rr.Code, http.StatusOK)
+	}
+	var entries []map[string]any
+	if err := json.NewDecoder(rr.Body).Decode(&entries); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(entries) != 0 {
+		t.Fatalf("len = %d, want 0", len(entries))
+	}
+}
+
+func TestHistoryRecordsSuccessfulOps(t *testing.T) {
+	handler := newHandler()
+
+	post := func(path string, a, b float64) *httptest.ResponseRecorder {
+		payload, _ := json.Marshal(operands{A: a, B: b})
+		req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader(payload))
+		req.Header.Set("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+		handler.ServeHTTP(rr, req)
+		return rr
+	}
+
+	if rr := post("/api/add", 10, 2); rr.Code != http.StatusOK {
+		t.Fatalf("add status = %d", rr.Code)
+	}
+	if rr := post("/api/multiply", 3, 4); rr.Code != http.StatusOK {
+		t.Fatalf("multiply status = %d", rr.Code)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/history", nil)
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("history status = %d", rr.Code)
+	}
+
+	var entries []struct {
+		Op     string  `json:"op"`
+		Result float64 `json:"result"`
+	}
+	if err := json.NewDecoder(rr.Body).Decode(&entries); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(entries) < 2 {
+		t.Fatalf("len = %d, want at least 2", len(entries))
+	}
+	ops := map[string]bool{}
+	for _, e := range entries {
+		ops[e.Op] = true
+	}
+	if !ops["add"] || !ops["multiply"] {
+		t.Fatalf("history missing expected ops: %+v", entries)
+	}
+}
+
+func TestHistoryHasFiniteCap(t *testing.T) {
+	handler := newHandler()
+	for i := 0; i < 20; i++ {
+		payload, _ := json.Marshal(operands{A: float64(i), B: 1})
+		req := httptest.NewRequest(http.MethodPost, "/api/add", bytes.NewReader(payload))
+		req.Header.Set("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+		handler.ServeHTTP(rr, req)
+		if rr.Code != http.StatusOK {
+			t.Fatalf("add #%d status = %d", i, rr.Code)
+		}
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/history", nil)
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	var entries []struct {
+		A float64 `json:"a"`
+	}
+	if err := json.NewDecoder(rr.Body).Decode(&entries); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(entries) == 0 || len(entries) >= 20 {
+		t.Fatalf("len = %d, want a finite cap below 20", len(entries))
+	}
 }

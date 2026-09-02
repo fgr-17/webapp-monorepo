@@ -101,13 +101,14 @@ In Grafana use **Explore** (not empty Starred dashboards): Tempo / Prometheus / 
 
 Short summary — full newbie guide with diagrams: **[Swagger README](apps/backend/api/README.md)**.
 
-All operation endpoints accept `POST` with JSON body `{"a": number, "b": number}` and return `{"result": number}`. Interactive docs: `/swagger/` (spec: `/openapi.yaml`).
+All operation endpoints accept `POST` with JSON body `{"a": number, "b": number}` and return `{"result": number}`. Successful operations are also appended to an in-memory history (`GET /api/history`, newest first, cap 10). Interactive docs: `/swagger/` (spec: `/openapi.yaml`).
 
 | Method | Path | Operation |
 |--------|------|-----------|
 | GET | `/health` | Health check |
 | GET | `/swagger/` | Swagger UI |
 | GET | `/openapi.yaml` | OpenAPI 3 spec |
+| GET | `/api/history` | Last successful ops (newest first, max 10) |
 | POST | `/api/add` | a + b |
 | POST | `/api/subtract` | a − b |
 | POST | `/api/multiply` | a × b |
@@ -133,6 +134,8 @@ curl -s -X POST http://localhost:8081/api/multiply \
 curl -s -X POST http://localhost:8081/api/divide \
   -H 'Content-Type: application/json' \
   -d '{"a":10,"b":2}'
+
+curl -s http://localhost:8081/api/history
 ```
 
 ## Local backend (without Docker)

@@ -20,7 +20,7 @@ func TestHandlerOpenAPI(t *testing.T) {
 		t.Fatalf("Content-Type = %q, want yaml", ct)
 	}
 	body := rr.Body.String()
-	for _, want := range []string{"openapi:", "/api/add", "/api/divide"} {
+	for _, want := range []string{"openapi:", "/api/add", "/api/divide", "/api/history"} {
 		if !strings.Contains(body, want) {
 			t.Fatalf("spec missing %q", want)
 		}

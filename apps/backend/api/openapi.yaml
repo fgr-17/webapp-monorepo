@@ -137,6 +137,31 @@ paths:
                 divideByZero:
                   value:
                     error: division by zero
+  /api/history:
+    get:
+      summary: Recent successful calculations
+      description: |
+        Returns up to the last 10 successful calculator operations (in-memory).
+        Entries are ordered newest first. Failed operations are not recorded.
+        History is cleared when the process restarts.
+      operationId: getHistory
+      tags:
+        - calculator
+      responses:
+        "200":
+          description: History entries, newest first (may be empty)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HistoryEntry"
+              example:
+                - op: add
+                  a: 10
+                  b: 2
+                  result: 12
+                  timestamp: "2026-07-29T15:04:05Z"
 components:
   schemas:
     Operands:
@@ -161,6 +186,36 @@ components:
         result:
           type: number
           format: double
+    HistoryEntry:
+      type: object
+      required:
+        - op
+        - a
+        - b
+        - result
+        - timestamp
+      properties:
+        op:
+          type: string
+          description: Operation name
+          enum:
+            - add
+            - subtract
+            - multiply
+            - divide
+        a:
+          type: number
+          format: double
+        b:
+          type: number
+          format: double
+        result:
+          type: number
+          format: double
+        timestamp:
+          type: string
+          format: date-time
+          description: When the operation completed (RFC3339 UTC)
     ErrorResponse:
       type: object
       required:

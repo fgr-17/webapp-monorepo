@@ -39,4 +39,5 @@ apps/backend/server
 
 # Frontend
 apps/frontend/node_modules/
-
+qa-sandbox/
+tmp/

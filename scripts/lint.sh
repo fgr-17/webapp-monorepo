@@ -36,7 +36,7 @@ done
 lint_backend_docker() {
   echo "==> Backend lint (backend-tools container)"
   if [ "$FIX" -eq 1 ]; then
-    backend_tools sh -c 'gofmt -w . && goimports -local github.com/zigglib/webapp-monorepo/backend -w . && golangci-lint run ./...'
+    backend_tools sh -c 'gofmt -w . && goimports -local github.com/fgr-17/webapp-monorepo/backend -w . && golangci-lint run ./...'
   else
     backend_tools sh -c '
       unformatted=$(gofmt -l .)
@@ -65,7 +65,7 @@ lint_backend_host() {
   cd "$ROOT/apps/backend"
   if [ "$FIX" -eq 1 ]; then
     gofmt -w .
-    command -v goimports >/dev/null && goimports -local github.com/zigglib/webapp-monorepo/backend -w .
+    command -v goimports >/dev/null && goimports -local github.com/fgr-17/webapp-monorepo/backend -w .
     golangci-lint run ./...
   else
     unformatted=$(gofmt -l .)
