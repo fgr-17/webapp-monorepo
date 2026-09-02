@@ -1,3 +1,5 @@
+import time
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -41,3 +43,26 @@ class CalculatorPage:
 
     def error_text(self):
         return self.driver.find_element(By.ID, "error").text
+
+    def history_section_visible(self):
+        el = self.driver.find_element(By.CSS_SELECTOR, "section.history")
+        return el.is_displayed()
+
+    def history_texts(self):
+        self.wait.until(EC.presence_of_element_located((By.ID, "history-list")))
+        items = self.driver.find_elements(By.CSS_SELECTOR, "#history-list li")
+        return [item.text for item in items]
+
+    def wait_for_history_containing(self, snippet):
+        self.wait.until(
+            lambda d: any(
+                snippet in text
+                for text in [
+                    item.text
+                    for item in d.find_elements(By.CSS_SELECTOR, "#history-list li")
+                ]
+            )
+        )
+
+    def wait_briefly(self, seconds=0.5):
+        time.sleep(seconds)

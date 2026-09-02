@@ -108,7 +108,7 @@ func initMetrics() error {
 }
 
 func newHandler() http.Handler {
-	return newHandlerWithHistory(history.New(11))
+	return newHandlerWithHistory(history.New(history.DefaultCap))
 }
 
 func newHandlerWithHistory(hist *history.Store) http.Handler {
@@ -142,9 +142,6 @@ func handleHistory(hist *history.Store) http.HandlerFunc {
 		entries := hist.List()
 		if entries == nil {
 			entries = []history.Entry{}
-		}
-		for i, j := 0, len(entries)-1; i < j; i, j = i+1, j-1 {
-			entries[i], entries[j] = entries[j], entries[i]
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(entries)
@@ -185,7 +182,6 @@ func handleOp(hist *history.Store, name string, op func(a, b float64) (float64, 
 			recordOp(ctx, name, "error", start)
 			slog.WarnContext(ctx, "operation failed", "operation", name, "error", err)
 			if errors.Is(err, calc.ErrDivideByZero) {
-				hist.Add(name, in.A, in.B, 0, time.Now().UTC())
 				writeError(w, http.StatusBadRequest, err.Error())
 				return
 			}

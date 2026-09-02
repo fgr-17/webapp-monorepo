@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { mock, test } from "node:test";
 
-import { callOperation, runOperation } from "./calculator.js";
+import {
+  callOperation,
+  fetchHistory,
+  formatHistoryRow,
+  runOperation,
+} from "./calculator.js";
 
 function jsonResponse(status, body) {
   return {
@@ -59,12 +64,14 @@ test("runOperation success updates result and busy flags", async () => {
     setBusy: (busy) => events.push(["busy", busy]),
     setResult: (text) => events.push(["result", text]),
     setError: (msg) => events.push(["error", msg]),
+    onSuccess: async () => events.push(["success"]),
   });
 
   assert.deepEqual(events, [
     ["error", null],
     ["busy", true],
     ["result", "Result: 7"],
+    ["success"],
     ["busy", false],
   ]);
 });
@@ -83,6 +90,8 @@ test("runOperation failure clears result and shows error", async () => {
     setBusy: (busy) => events.push(["busy", busy]),
     setResult: (text) => events.push(["result", text]),
     setError: (msg) => events.push(["error", msg]),
+    onFailure: async (info) =>
+      events.push(["failure", info.op, info.a, info.b]),
   });
 
   assert.deepEqual(events, [
@@ -90,6 +99,7 @@ test("runOperation failure clears result and shows error", async () => {
     ["busy", true],
     ["result", "Result: —"],
     ["error", "division by zero"],
+    ["failure", "divide", 1, 0],
     ["busy", false],
   ]);
 });
@@ -107,4 +117,25 @@ test("runOperation covers subtract multiply divide paths", async () => {
     const got = await callOperation(fetchFn, op, a, b);
     assert.equal(got, result);
   }
+});
+
+test("fetchHistory returns array from /api/history", async () => {
+  const fetchFn = mock.fn(async (url) => {
+    assert.equal(url, "/api/history");
+    return jsonResponse(200, [{ op: "add", a: 10, b: 2, result: 12 }]);
+  });
+  const entries = await fetchHistory(fetchFn);
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0].op, "add");
+});
+
+test("formatHistoryRow uses operation symbols", () => {
+  assert.equal(
+    formatHistoryRow({ op: "add", a: 10, b: 2, result: 12 }),
+    "10 + 2 = 12",
+  );
+  assert.equal(
+    formatHistoryRow({ op: "divide", a: 10, b: 2, result: 5 }),
+    "10 ÷ 2 = 5",
+  );
 });
