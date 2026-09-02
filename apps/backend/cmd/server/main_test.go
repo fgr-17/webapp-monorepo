@@ -160,7 +160,7 @@ func TestHistoryEmpty(t *testing.T) {
 	}
 }
 
-func TestHistoryRecordsSuccessfulOps(t *testing.T) {
+func TestHistoryRecordsSuccessNotErrors(t *testing.T) {
 	handler := newHandler()
 
 	post := func(path string, a, b float64) *httptest.ResponseRecorder {
@@ -175,8 +175,18 @@ func TestHistoryRecordsSuccessfulOps(t *testing.T) {
 	if rr := post("/api/add", 10, 2); rr.Code != http.StatusOK {
 		t.Fatalf("add status = %d", rr.Code)
 	}
+	if rr := post("/api/divide", 10, 0); rr.Code != http.StatusBadRequest {
+		t.Fatalf("divide-by-zero status = %d", rr.Code)
+	}
 	if rr := post("/api/multiply", 3, 4); rr.Code != http.StatusOK {
 		t.Fatalf("multiply status = %d", rr.Code)
+	}
+	bad := httptest.NewRequest(http.MethodPost, "/api/add", strings.NewReader("{bad"))
+	bad.Header.Set("Content-Type", "application/json")
+	badRR := httptest.NewRecorder()
+	handler.ServeHTTP(badRR, bad)
+	if badRR.Code != http.StatusBadRequest {
+		t.Fatalf("invalid JSON status = %d", badRR.Code)
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/history", nil)
@@ -188,26 +198,27 @@ func TestHistoryRecordsSuccessfulOps(t *testing.T) {
 
 	var entries []struct {
 		Op     string  `json:"op"`
+		A      float64 `json:"a"`
+		B      float64 `json:"b"`
 		Result float64 `json:"result"`
 	}
 	if err := json.NewDecoder(rr.Body).Decode(&entries); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if len(entries) < 2 {
-		t.Fatalf("len = %d, want at least 2", len(entries))
+	if len(entries) != 2 {
+		t.Fatalf("len = %d, want 2 (errors must not be recorded); body entries=%+v", len(entries), entries)
 	}
-	ops := map[string]bool{}
-	for _, e := range entries {
-		ops[e.Op] = true
+	if entries[0].Op != "multiply" || entries[0].Result != 12 {
+		t.Fatalf("newest = %+v, want multiply/12", entries[0])
 	}
-	if !ops["add"] || !ops["multiply"] {
-		t.Fatalf("history missing expected ops: %+v", entries)
+	if entries[1].Op != "add" || entries[1].Result != 12 {
+		t.Fatalf("older = %+v, want add/12", entries[1])
 	}
 }
 
-func TestHistoryHasFiniteCap(t *testing.T) {
+func TestHistoryCap(t *testing.T) {
 	handler := newHandler()
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 12; i++ {
 		payload, _ := json.Marshal(operands{A: float64(i), B: 1})
 		req := httptest.NewRequest(http.MethodPost, "/api/add", bytes.NewReader(payload))
 		req.Header.Set("Content-Type", "application/json")
@@ -228,7 +239,11 @@ func TestHistoryHasFiniteCap(t *testing.T) {
 	if err := json.NewDecoder(rr.Body).Decode(&entries); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if len(entries) == 0 || len(entries) >= 20 {
-		t.Fatalf("len = %d, want a finite cap below 20", len(entries))
+	if len(entries) != 10 {
+		t.Fatalf("len = %d, want 10", len(entries))
+	}
+	// Newest first: a=11 .. a=2 (a=0 and a=1 dropped).
+	if entries[0].A != 11 || entries[9].A != 2 {
+		t.Fatalf("order/cap wrong: first=%v last=%v", entries[0].A, entries[9].A)
 	}
 }

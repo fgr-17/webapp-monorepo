@@ -1,10 +1,12 @@
-import { runOperation } from "./calculator.js";
+import { fetchHistory, formatHistoryRow, runOperation } from "./calculator.js";
 
 const form = document.getElementById("calc-form");
 const aInput = document.getElementById("a");
 const bInput = document.getElementById("b");
 const resultEl = document.getElementById("result");
 const errorEl = document.getElementById("error");
+const historyListEl = document.getElementById("history-list");
+const historyEmptyEl = document.getElementById("history-empty");
 const buttons = form.querySelectorAll("button[data-op]");
 
 function setBusy(busy) {
@@ -27,6 +29,29 @@ function setError(message) {
   errorEl.hidden = false;
 }
 
+function renderHistory(entries) {
+  historyListEl.replaceChildren();
+  if (!entries.length) {
+    historyEmptyEl.hidden = false;
+    return;
+  }
+  historyEmptyEl.hidden = true;
+  for (const entry of entries) {
+    const li = document.createElement("li");
+    li.textContent = formatHistoryRow(entry);
+    historyListEl.appendChild(li);
+  }
+}
+
+async function loadHistory() {
+  try {
+    const entries = await fetchHistory();
+    renderHistory(entries);
+  } catch {
+    // Keep whatever is on screen; do not clear the result/error area.
+  }
+}
+
 buttons.forEach((btn) => {
   btn.addEventListener("click", () => {
     runOperation({
@@ -36,6 +61,7 @@ buttons.forEach((btn) => {
       setBusy,
       setResult,
       setError,
+      onSuccess: loadHistory,
     });
   });
 });
@@ -43,3 +69,5 @@ buttons.forEach((btn) => {
 form.addEventListener("submit", (e) => {
   e.preventDefault();
 });
+
+loadHistory();

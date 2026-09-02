@@ -27,7 +27,7 @@ body {
 }
 
 .app {
-  width: min(100% - 2rem, 22rem);
+  width: min(100% - 2rem, 24rem);
   padding: 1.75rem;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -114,4 +114,39 @@ button:disabled {
   margin: 0.5rem 0 0;
   color: var(--error);
   font-size: 0.9rem;
+}
+
+.history {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.history h2 {
+  margin: 0 0 0.65rem;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.history-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.history-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.history-list li {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
 }
