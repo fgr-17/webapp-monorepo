@@ -6,6 +6,9 @@ Feature: Calculator web UI
   Background:
     Given I open the calculator page
 
+  Scenario: Empty history shows placeholder
+    Then the history empty message should be "No history yet"
+
   Scenario Outline: Successful operations
     When I set operand A to "<a>" and B to "<b>"
     And I click the "<op>" operation
@@ -30,7 +33,7 @@ Feature: Calculator web UI
     And I click the "multiply" operation
     Then the result should show "20"
     And no error should be visible
-    
+
   Scenario: Successful add appears in history
     When I set operand A to "10" and B to "2"
     And I click the "add" operation
@@ -43,3 +46,25 @@ Feature: Calculator web UI
     Then an error containing "division by zero" should be visible
     And the result should show "—"
     And the history should not contain "10 ÷ 0 = 0"
+
+  Scenario: History is newest-first
+    When I set operand A to "1" and B to "1"
+    And I click the "add" operation
+    And I set operand A to "2" and B to "2"
+    And I click the "add" operation
+    Then the history first entry should contain "2 + 2 = 4"
+    And the history should contain "1 + 1 = 2"
+
+  Scenario: History persists after reload
+    When I set operand A to "3" and B to "4"
+    And I click the "add" operation
+    Then the history should contain "3 + 4 = 7"
+    When I reload the calculator page
+    Then the history should contain "3 + 4 = 7"
+
+  Scenario: History is capped at 10 entries
+    Given I have performed 10 successful operations
+    When I set operand A to "99" and B to "1"
+    And I click the "add" operation
+    Then the history should have at most 10 entries
+    And the history should contain "99 + 1 = 100"

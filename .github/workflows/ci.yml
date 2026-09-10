@@ -1,0 +1,49 @@
+# CI: lint, unit tests, and Behave+Selenium e2e on every push/PR.
+# Requires Docker only (same as local ./scripts/*.sh).
+
+name: CI
+
+on:
+  push:
+    branches:
+      - develop
+      - "froux/**"
+      - "mgrandon/**"
+  pull_request:
+    branches:
+      - develop
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run linters (Docker tool containers)
+        run: ./scripts/lint.sh
+
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run backend + frontend unit tests
+        run: ./scripts/test.sh
+
+  e2e:
+    name: E2E (Behave + Selenium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run browser e2e suite
+        run: ./scripts/e2e.sh
