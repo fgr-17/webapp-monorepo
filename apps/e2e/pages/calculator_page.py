@@ -66,3 +66,26 @@ class CalculatorPage:
 
     def wait_briefly(self, seconds=0.5):
         time.sleep(seconds)
+
+    def history_empty_text(self):
+        el = self.driver.find_element(By.ID, "history-empty")
+        return el.text
+
+    def history_empty_visible(self):
+        el = self.driver.find_element(By.ID, "history-empty")
+        return el.is_displayed() and bool(el.text.strip())
+
+    def wait_for_history_empty(self):
+        # loadHistory() is async on page open; wait until empty placeholder shows.
+        self.wait.until(lambda d: self.history_empty_visible())
+
+    def history_first_text(self):
+        texts = self.history_texts()
+        return texts[0] if texts else ""
+
+    def history_count(self):
+        return len(self.history_texts())
+
+    def reload(self):
+        self.driver.refresh()
+        self.wait.until(EC.presence_of_element_located((By.ID, "calc-form")))
